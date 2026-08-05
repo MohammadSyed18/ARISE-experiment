@@ -1,0 +1,37 @@
+{
+  "name": "kinase-candidate-revision",
+  "rounds": [
+    {
+      "evidence": [
+        {"id": "e1", "statement": "Candidate K-17 inhibits the target in a biochemical assay.", "source": "assay-A", "status": "measured", "confidence": 0.92}
+      ],
+      "claims": [
+        {"id": "c1", "statement": "K-17 binds the target kinase.", "status": "inferred", "confidence": 0.84, "evidence_ids": ["e1"]},
+        {"id": "c2", "statement": "K-17 is a viable cellular lead.", "status": "speculative", "confidence": 0.58, "depends_on": ["c1"]}
+      ]
+    },
+    {
+      "evidence": [
+        {"id": "e2", "statement": "A detergent-sensitive counter-screen indicates aggregate-driven inhibition.", "source": "counter-screen-B", "status": "measured", "confidence": 0.95, "supports": false}
+      ],
+      "contradiction": true,
+      "revisions": [
+        {
+          "old_id": "c1",
+          "reason": "e2",
+          "replacement": {"id": "c3", "statement": "Observed inhibition is likely assay interference rather than target binding.", "status": "inferred", "confidence": 0.91, "evidence_ids": ["e2"]}
+        }
+      ],
+      "expected_invalidations": ["c2"]
+    },
+    {
+      "evidence": [
+        {"id": "e3", "statement": "An orthogonal binding assay shows no measurable affinity.", "source": "SPR-C", "status": "measured", "confidence": 0.97, "supports": true}
+      ],
+      "claims": [
+        {"id": "c4", "statement": "K-17 should be removed from the lead series.", "status": "inferred", "confidence": 0.94, "evidence_ids": ["e2", "e3"], "depends_on": ["c3"]}
+      ]
+    }
+  ]
+}
+
