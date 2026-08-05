@@ -13,8 +13,11 @@ def main() -> None:
     run = subparsers.add_parser("run")
     run.add_argument("scenario", type=Path)
     run.add_argument("--out", type=Path)
+    run.add_argument("--verify-repeat", action="store_true", help="run twice and fail if artifacts differ")
     args = parser.parse_args()
     result = run_scenario(args.scenario)
+    if args.verify_repeat and result != run_scenario(args.scenario):
+        raise RuntimeError("repeated run produced a different artifact")
     rendered = json.dumps(result, indent=2)
     if args.out:
         args.out.parent.mkdir(parents=True, exist_ok=True)
@@ -24,4 +27,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-
