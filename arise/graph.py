@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from collections import defaultdict, deque
+from copy import deepcopy
 from dataclasses import asdict
 from typing import Iterable
 
@@ -30,6 +31,11 @@ class BeliefGraph:
         missing = [parent for parent in claim.depends_on if parent not in self.claims]
         if missing:
             raise ValueError(f"unknown dependencies: {missing}")
+        if any(
+            self.claims[parent].state != ClaimState.ACTIVE
+            for parent in claim.depends_on
+        ):
+            raise ValueError("claim depends on an inactive claim")
         unknown_evidence = [
             item for item in claim.evidence_ids if item not in self.evidence
         ]
@@ -55,6 +61,15 @@ class BeliefGraph:
             raise KeyError(reason_evidence_id)
         if replacement.revision_of not in (None, old_id):
             raise ValueError("replacement.revision_of must reference the old claim")
+        affected = {old_id}
+        queue = deque(self.children.get(old_id, ()))
+        while queue:
+            current = queue.popleft()
+            if current not in affected:
+                affected.add(current)
+                queue.extend(self.children.get(current, ()))
+        if affected.intersection(replacement.depends_on):
+            raise ValueError("replacement cannot depend on invalidated claims")
         previous_revision = replacement.revision_of
         replacement.revision_of = old_id
         try:
@@ -114,7 +129,7 @@ class BeliefGraph:
                 {**asdict(item), "status": item.status.value}
                 for item in self.evidence.values()
             ],
-            "events": self.events,
+            "events": deepcopy(self.events),
         }
 
     def _active(self, claim_id: str) -> Claim:

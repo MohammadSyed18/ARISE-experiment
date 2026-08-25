@@ -1,0 +1,96 @@
+{
+  "name": "Sensor calibration revision",
+  "rounds": [
+    {
+      "evidence": [
+        {
+          "id": "e1",
+          "statement": "A field sensor appears stable.",
+          "source": "initial-lab",
+          "status": "measured",
+          "expected_status": "measured",
+          "confidence": 0.85
+        }
+      ],
+      "claims": [
+        {
+          "id": "root",
+          "statement": "Initial performance is adequate.",
+          "status": "inferred",
+          "confidence": 0.75,
+          "evidence_ids": [
+            "e1"
+          ]
+        },
+        {
+          "id": "deployment",
+          "statement": "Proceed with deployment.",
+          "status": "speculative",
+          "confidence": 0.6,
+          "depends_on": [
+            "root"
+          ]
+        },
+        {
+          "id": "budget",
+          "statement": "Deployment budget is justified.",
+          "status": "speculative",
+          "confidence": 0.5,
+          "depends_on": [
+            "deployment"
+          ]
+        }
+      ]
+    },
+    {
+      "evidence": [
+        {
+          "id": "e2",
+          "statement": "A reference instrument reveals temperature-dependent bias.",
+          "source": "independent-lab",
+          "status": "measured",
+          "expected_status": "measured",
+          "confidence": 0.95,
+          "supports": false
+        }
+      ],
+      "contradiction": true,
+      "revisions": [
+        {
+          "old_id": "root",
+          "reason": "e2",
+          "replacement": {
+            "id": "qualified",
+            "statement": "Performance is insufficient under the new conditions.",
+            "status": "inferred",
+            "confidence": 0.9,
+            "evidence_ids": [
+              "e1",
+              "e2"
+            ]
+          }
+        }
+      ],
+      "expected_invalidations": [
+        "deployment",
+        "budget"
+      ]
+    },
+    {
+      "claims": [
+        {
+          "id": "followup",
+          "statement": "Run a controlled follow-up before deployment.",
+          "status": "inferred",
+          "confidence": 0.8,
+          "depends_on": [
+            "qualified"
+          ],
+          "evidence_ids": [
+            "e2"
+          ]
+        }
+      ]
+    }
+  ]
+}

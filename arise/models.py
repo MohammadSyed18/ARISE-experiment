@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import asdict, dataclass, field
 from enum import StrEnum
+from math import isfinite
 from typing import Any
 
 
@@ -28,7 +29,21 @@ class Evidence:
     round_seen: int = 0
 
     def __post_init__(self) -> None:
-        if not 0 <= self.confidence <= 1:
+        if (
+            not isinstance(self.id, str)
+            or not self.id.strip()
+            or not isinstance(self.statement, str)
+            or not self.statement.strip()
+        ):
+            raise ValueError("id and statement must be nonempty strings")
+        if not isinstance(self.status, EpistemicStatus):
+            raise ValueError("status must be an EpistemicStatus")
+        if (
+            isinstance(self.confidence, bool)
+            or not isinstance(self.confidence, (int, float))
+            or not isfinite(self.confidence)
+            or not 0 <= self.confidence <= 1
+        ):
             raise ValueError("confidence must be between 0 and 1")
 
 
@@ -46,7 +61,21 @@ class Claim:
     created_round: int = 0
 
     def __post_init__(self) -> None:
-        if not 0 <= self.confidence <= 1:
+        if (
+            not isinstance(self.id, str)
+            or not self.id.strip()
+            or not isinstance(self.statement, str)
+            or not self.statement.strip()
+        ):
+            raise ValueError("id and statement must be nonempty strings")
+        if not isinstance(self.status, EpistemicStatus):
+            raise ValueError("status must be an EpistemicStatus")
+        if (
+            isinstance(self.confidence, bool)
+            or not isinstance(self.confidence, (int, float))
+            or not isfinite(self.confidence)
+            or not 0 <= self.confidence <= 1
+        ):
             raise ValueError("confidence must be between 0 and 1")
         if self.id in self.depends_on:
             raise ValueError("claim cannot depend on itself")
@@ -56,4 +85,3 @@ class Claim:
         value["status"] = self.status.value
         value["state"] = self.state.value
         return value
-
