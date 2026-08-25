@@ -12,3 +12,7 @@ python -m unittest discover -s tests -v
 ```
 
 the included adapter is rule-based and deterministic, so the example runs without an API key. an LLM adapter is still to be added; this repository alone does not demonstrate an end-to-end LLM experiment.
+
+## Implementation details
+
+Claim revisions are validated before the original claim changes state. Evidence IDs are deduplicated during confidence aggregation, and revision metrics keep invalidations separate across experimental rounds.
