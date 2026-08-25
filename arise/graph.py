@@ -20,7 +20,9 @@ class BeliefGraph:
         if item.id in self.evidence:
             raise ValueError(f"duplicate evidence id: {item.id}")
         self.evidence[item.id] = item
-        self.events.append({"type": "evidence_added", "id": item.id, "round": item.round_seen})
+        self.events.append(
+            {"type": "evidence_added", "id": item.id, "round": item.round_seen}
+        )
 
     def add_claim(self, claim: Claim) -> None:
         if claim.id in self.claims:
@@ -28,7 +30,9 @@ class BeliefGraph:
         missing = [parent for parent in claim.depends_on if parent not in self.claims]
         if missing:
             raise ValueError(f"unknown dependencies: {missing}")
-        unknown_evidence = [item for item in claim.evidence_ids if item not in self.evidence]
+        unknown_evidence = [
+            item for item in claim.evidence_ids if item not in self.evidence
+        ]
         if unknown_evidence:
             raise ValueError(f"unknown evidence: {unknown_evidence}")
         self.claims[claim.id] = claim
@@ -39,25 +43,36 @@ class BeliefGraph:
             for parent in claim.depends_on:
                 self.children[parent].discard(claim.id)
             raise ValueError("dependency edge creates a cycle")
-        self.events.append({"type": "claim_added", "id": claim.id, "round": claim.created_round})
+        self.events.append(
+            {"type": "claim_added", "id": claim.id, "round": claim.created_round}
+        )
 
-    def revise(self, old_id: str, replacement: Claim, reason_evidence_id: str) -> list[str]:
+    def revise(
+        self, old_id: str, replacement: Claim, reason_evidence_id: str
+    ) -> list[str]:
         old = self._active(old_id)
         if reason_evidence_id not in self.evidence:
             raise KeyError(reason_evidence_id)
         if replacement.revision_of not in (None, old_id):
             raise ValueError("replacement.revision_of must reference the old claim")
+        previous_revision = replacement.revision_of
         replacement.revision_of = old_id
+        try:
+            self.add_claim(replacement)
+        except (ValueError, KeyError):
+            replacement.revision_of = previous_revision
+            raise
         old.state = ClaimState.REVISED
         old.invalidated_by = reason_evidence_id
-        self.add_claim(replacement)
         invalidated = self.invalidate_descendants(old_id, reason_evidence_id)
-        self.events.append({
-            "type": "claim_revised",
-            "from": old_id,
-            "to": replacement.id,
-            "reason": reason_evidence_id,
-        })
+        self.events.append(
+            {
+                "type": "claim_revised",
+                "from": old_id,
+                "to": replacement.id,
+                "reason": reason_evidence_id,
+            }
+        )
         return invalidated
 
     def invalidate_descendants(self, claim_id: str, reason: str) -> list[str]:
@@ -74,13 +89,15 @@ class BeliefGraph:
         return changed
 
     def active_claims(self) -> Iterable[Claim]:
-        return (claim for claim in self.claims.values() if claim.state == ClaimState.ACTIVE)
+        return (
+            claim for claim in self.claims.values() if claim.state == ClaimState.ACTIVE
+        )
 
     def confidence_from_evidence(self, evidence_ids: list[str]) -> float:
         """Combine independent evidence using noisy-OR, with opposing evidence reducing confidence."""
         support_miss = 1.0
         opposition_miss = 1.0
-        for evidence_id in evidence_ids:
+        for evidence_id in dict.fromkeys(evidence_ids):
             evidence = self.evidence[evidence_id]
             if evidence.supports:
                 support_miss *= 1 - evidence.confidence
@@ -94,7 +111,8 @@ class BeliefGraph:
         return {
             "claims": [claim.to_dict() for claim in self.claims.values()],
             "evidence": [
-                {**asdict(item), "status": item.status.value} for item in self.evidence.values()
+                {**asdict(item), "status": item.status.value}
+                for item in self.evidence.values()
             ],
             "events": self.events,
         }
@@ -123,4 +141,3 @@ class BeliefGraph:
             return False
 
         return visit(start)
-
