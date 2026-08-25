@@ -46,3 +46,14 @@ Bootstrap intervals resample scenario pairs. Three examples are useful for regre
 ## Tests
 
 The suite exercises revision rollback, invalid dependency replacement, source correlation, read-only provenance, cross-round metric identity, stale-belief baseline behavior, deterministic bootstrap sampling, scenario errors, and HTML escaping.
+
+## Reproducible experiment archives
+
+```sh
+python -m arise.cli archive scenarios/sensor_calibration.json --out runs/sensor.archive.json
+python -m arise.cli replay runs/sensor.archive.json
+python -m arise.cli archive scenarios/sensor_calibration.json --policy static --out runs/static.archive.json
+python -m arise.cli compare runs/sensor.archive.json runs/static.archive.json
+```
+
+`archive.py` packages the validated scenario, policy, and computed result in a versioned envelope. SHA-256 detects accidental changes. Verification also reruns the scenario and compares the complete result, so changing results and recomputing the digest does not bypass replay validation. Files are atomically replaced after validation and limited to 10 MB. The digest is an integrity check, not an identity signature. Comparison reports added, removed, and changed claims alongside both metric sets. The existing fixture-performance limitations apply to archived results as well.
